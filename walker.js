@@ -1,5 +1,5 @@
 export class Walker {
-    constructor(canvas, food, color = '#ff0000') {
+    constructor(canvas, food, color = '#ff0000', obstacle) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.x = canvas.width / 2;
@@ -20,7 +20,70 @@ export class Walker {
         this.startTime = Date.now();
         this.moveCount = 0;
         this.food = food;
+        this.obstacle = obstacle;
     }
+
+    move() {
+        // If inside an obstacle, move away from it
+        if (this.obstacle.detectCollision(this.x, this.y, this.size)) {
+            // Move away from the obstacle by reversing direction
+            this.currentAngle += Math.PI;
+        }
+
+        this.path.push({ x: this.x, y: this.y });
+
+        if (this.path.length > this.maxPathLength) {
+            this.path.shift();
+        }
+
+        this.hunger = Math.max(0, this.hunger - this.hungerDecreaseRate);
+
+        const stepSize = this.hunger < this.hungerThreshold ? 5 : 2 + Math.random() * 3; 
+        const angleChange = (Math.random() - 0.5) * this.angleChangeRate;
+        this.currentAngle += angleChange;
+
+        let newX = this.x + stepSize * Math.cos(this.currentAngle);
+        let newY = this.y + stepSize * Math.sin(this.currentAngle);
+
+        // Adjust for obstacle collisions again after moving
+        while (this.obstacle.detectCollision(newX, newY, this.size)) {
+            newX = this.x - stepSize * Math.cos(this.currentAngle);
+            newY = this.y - stepSize * Math.sin(this.currentAngle);
+            this.currentAngle += Math.random() * 2 * Math.PI; // Randomly change direction
+        }
+
+        const edgeBuffer = this.size + this.boundaryBuffer;
+        const rightEdge = this.canvas.width - edgeBuffer;
+        const bottomEdge = this.canvas.height - edgeBuffer;
+
+        if (newX < edgeBuffer) {
+            newX = edgeBuffer;
+            this.currentAngle = Math.random() * Math.PI + Math.PI;
+        } else if (newX > rightEdge) {
+            newX = rightEdge;
+            this.currentAngle = Math.random() * Math.PI;
+        }
+
+        if (newY < edgeBuffer) {
+            newY = edgeBuffer;
+            this.currentAngle = Math.random() * (Math.PI / 2) + (3 * Math.PI / 2);
+        } else if (newY > bottomEdge) {
+            newY = bottomEdge;
+            this.currentAngle = Math.random() * (Math.PI / 2) + (Math.PI / 2);
+        }
+
+        this.x = newX;
+        this.y = newY;
+        this.straightLineCounter++;
+    }
+
+
+
+
+
+
+
+
 
     drawWalker() {
         this.ctx.beginPath();
@@ -33,8 +96,8 @@ export class Walker {
         this.ctx.globalCompositeOperation = 'lighter'; // Blend mode for path color bleeding
         this.ctx.beginPath();
         this.ctx.strokeStyle = this.color; // Use the walker's color
-        this.ctx.lineWidth = 0.1;
-        this.ctx.globalAlpha = 1;
+        this.ctx.lineWidth = 0.4;
+        this.ctx.globalAlpha = 0.5;
 
         this.path.forEach((point, index) => {
             if (index === 0) {
@@ -66,46 +129,7 @@ export class Walker {
         return distance < (r1 + r2);
     }
 
-    move() {
-        this.path.push({ x: this.x, y: this.y });
-
-        if (this.path.length > this.maxPathLength) {
-            this.path.shift();
-        }
-
-        this.hunger = Math.max(0, this.hunger - this.hungerDecreaseRate);
-
-        const stepSize = this.hunger < this.hungerThreshold ? 5 : 2 + Math.random() * 3; // Random step size
-        const angleChange = (Math.random() - 0.5) * this.angleChangeRate;
-        this.currentAngle += angleChange;
-
-        let newX = this.x + stepSize * Math.cos(this.currentAngle);
-        let newY = this.y + stepSize * Math.sin(this.currentAngle);
-
-        const edgeBuffer = this.size + this.boundaryBuffer;
-        const rightEdge = this.canvas.width - edgeBuffer;
-        const bottomEdge = this.canvas.height - edgeBuffer;
-
-        if (newX < edgeBuffer) {
-            newX = edgeBuffer;
-            this.currentAngle = Math.random() * Math.PI + Math.PI;
-        } else if (newX > rightEdge) {
-            newX = rightEdge;
-            this.currentAngle = Math.random() * Math.PI;
-        }
-
-        if (newY < edgeBuffer) {
-            newY = edgeBuffer;
-            this.currentAngle = Math.random() * (Math.PI / 2) + (3 * Math.PI / 2);
-        } else if (newY > bottomEdge) {
-            newY = bottomEdge;
-            this.currentAngle = Math.random() * (Math.PI / 2) + (Math.PI / 2);
-        }
-
-        this.x = newX;
-        this.y = newY;
-        this.straightLineCounter++;
-    }
+    
 
     handleFoodCollision() {
         const foodItems = this.food.getFoodItems();

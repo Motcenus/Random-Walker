@@ -1,32 +1,44 @@
 import { Food } from './food.js';
 import { Walker } from './walker.js';
+import { Obstacle } from './obstacle.js';
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 // Configuration parameters
-const numberOfFood = 100;
-const numberOfWalkers = 100;
+const numberOfFood = 50;
+const numberOfWalkers = 50;
 
 // Set canvas size
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// Create food and walkers
-const food = new Food(canvas, 1, numberOfFood);
+// Create food, obstacles, and walkers
+const food = new Food(canvas, 5, numberOfFood);
+const obstacle = new Obstacle(canvas);
 
 const walkers = [];
 for (let i = 0; i < numberOfWalkers; i++) {
     const color = `hsl(${Math.random() * 360}, 100%, 50%)`;
-    walkers.push(new Walker(canvas, food, color));
+    walkers.push(new Walker(canvas, food, color, obstacle));
 }
+
+// Handle mouse click to draw obstacles
+canvas.addEventListener('mousedown', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const radius = 20; // Example obstacle radius
+    obstacle.addObstacle(x, y, radius);
+});
 
 function gameLoop() {
     // Clear the canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw food
+    // Draw food and obstacles
     food.drawFood();
+    obstacle.drawObstacles();
 
     // Update and draw each walker
     walkers.forEach(walker => {
@@ -46,7 +58,7 @@ function gameLoop() {
     // Make non-leader walkers follow the leader's trail
     walkers.forEach(walker => {
         if (walker !== leader) {
-            walker.followTrailIfClose(leader, 1000);
+            walker.followTrailIfClose(leader, 50);
         }
     });
 
@@ -58,7 +70,7 @@ function gameLoop() {
 }
 
 function displayHighestScore(leader) {
-    ctx.font = '20px Arial';
+    ctx.font = '40px Arial';
     ctx.textAlign = 'center';
     ctx.fillStyle = leader.color;
     ctx.fillText(`Highest Score: ${leader.score}`, canvas.width / 2, 50);
