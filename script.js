@@ -6,7 +6,7 @@ const ctx = canvas.getContext('2d');
 
 // Configuration parameters
 const numberOfFood = 50;
-const numberOfWalkers = 100;
+const numberOfWalkers = 5;
 
 // Set canvas size
 canvas.width = window.innerWidth;
@@ -31,10 +31,14 @@ function gameLoop() {
     // Update and draw each walker
     walkers.forEach(walker => {
         walker.move();
+        walker.handleFoodCollision(); // Check for food collisions
         walker.drawPath();
         walker.drawWalker();
         walker.drawScoreAndTimer();
     });
+
+    // Update food status
+    food.updateFoodStatus();
 
     // Determine the leader
     const leader = walkers.reduce((prev, curr) => (curr.score > prev.score ? curr : prev), walkers[0]);

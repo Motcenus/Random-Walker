@@ -14,13 +14,12 @@ export class Walker {
         this.learningRate = 0.1;
         this.currentAngle = Math.random() * 2 * Math.PI;
         this.angleChangeRate = 0.5;
-        this.maxStraightLineLength = 10;
-        this.straightLineCounter = 0;
         this.boundaryBuffer = 20;
         this.score = 0;
         this.preferences = Array(8).fill(1);
-        this.moveCount = 0;
         this.startTime = Date.now();
+        this.moveCount = 0;
+        this.food = food;
     }
 
     drawWalker() {
@@ -31,6 +30,7 @@ export class Walker {
     }
 
     drawPath() {
+        this.ctx.globalCompositeOperation = 'lighter'; // Blend mode for path color bleeding
         this.ctx.beginPath();
         this.ctx.strokeStyle = this.color; // Use the walker's color
         this.ctx.lineWidth = 2;
@@ -46,6 +46,7 @@ export class Walker {
 
         this.ctx.stroke();
         this.ctx.globalAlpha = 1.0;
+        this.ctx.globalCompositeOperation = 'source-over'; // Reset blend mode
     }
 
     drawScoreAndTimer() {
@@ -113,6 +114,8 @@ export class Walker {
             if (collision) {
                 this.score += 1;
                 this.hunger = Math.min(100, this.hunger + 20);
+                food.collisions += 1; // Increase the collision count
+                this.food.updateFoodStatus(); // Update food status
                 this.updatePreferences(true);
                 return false;
             }
@@ -178,8 +181,8 @@ export class Walker {
             this.x += stepSize * Math.cos(angle);
             this.y += stepSize * Math.sin(angle);
 
-            this.x = Math.max(this.size, Math.min(this.canvas.width - this.size, this.x));
-            this.y = Math.max(this.size, Math.min(this.canvas.height - this.size, this.y));
+            this.x = Math.max(this.size, Math.min(this.x, this.canvas.width - this.size));
+            this.y = Math.max(this.size, Math.min(this.y, this.canvas.height - this.size));
         }
     }
 }
