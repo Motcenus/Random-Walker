@@ -2,41 +2,39 @@ export class Food {
     constructor(canvas, size, numberOfFood) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
+        this.size = size;
         this.foodSize = size;
-        this.foods = [];
-        this.maxCollisions = 3; // Number of collisions before food disappears
-
-        this.initFood(numberOfFood);
+        this.maxCollisions = 5; // Maximum number of collisions before food disappears
+        this.foods = this.createFoodItems(numberOfFood);
     }
 
-    initFood(numberOfFood) {
+    createFoodItems(numberOfFood) {
+        const foodItems = [];
         for (let i = 0; i < numberOfFood; i++) {
-            this.foods.push({
+            foodItems.push({
                 x: Math.random() * this.canvas.width,
                 y: Math.random() * this.canvas.height,
-                color: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.6)`, // Semi-transparent
                 collisions: 0
             });
         }
+        return foodItems;
     }
 
     drawFood() {
-        this.ctx.globalCompositeOperation = 'lighter'; // Blend mode for color bleeding
+        this.ctx.fillStyle = 'green';
         this.foods.forEach(food => {
             this.ctx.beginPath();
             this.ctx.arc(food.x, food.y, this.foodSize, 0, Math.PI * 2);
-            this.ctx.fillStyle = food.color;
             this.ctx.fill();
         });
-        this.ctx.globalCompositeOperation = 'source-over'; // Reset blend mode
+    }
+
+    updateFoodStatus() {
+        // Remove food that has reached the maximum number of collisions
+        this.foods = this.foods.filter(food => food.collisions < this.maxCollisions);
     }
 
     getFoodItems() {
         return this.foods;
-    }
-
-    updateFoodStatus() {
-        // Remove food that has reached the collision threshold
-        this.foods = this.foods.filter(food => food.collisions < this.maxCollisions);
     }
 }

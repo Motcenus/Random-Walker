@@ -4,16 +4,16 @@ export class Walker {
         this.ctx = canvas.getContext('2d');
         this.x = canvas.width / 2;
         this.y = canvas.height / 2;
-        this.size = 5;
+        this.size = 0;
         this.color = color;
         this.path = [];
         this.maxPathLength = 1000;
-        this.hunger = 100;
+        this.hunger = 0;
         this.hungerDecreaseRate = 0.05;
         this.hungerThreshold = 30;
         this.learningRate = 0.1;
         this.currentAngle = Math.random() * 2 * Math.PI;
-        this.angleChangeRate = 0.5;
+        this.angleChangeRate = 2;
         this.boundaryBuffer = 20;
         this.score = 0;
         this.preferences = Array(8).fill(1);
@@ -33,8 +33,8 @@ export class Walker {
         this.ctx.globalCompositeOperation = 'lighter'; // Blend mode for path color bleeding
         this.ctx.beginPath();
         this.ctx.strokeStyle = this.color; // Use the walker's color
-        this.ctx.lineWidth = 2;
-        this.ctx.globalAlpha = 0.5;
+        this.ctx.lineWidth = 0.1;
+        this.ctx.globalAlpha = 1;
 
         this.path.forEach((point, index) => {
             if (index === 0) {
@@ -176,13 +176,9 @@ export class Walker {
 
         if (closestTrail && minDistance < threshold) {
             const angle = Math.atan2(closestTrail.y - this.y, closestTrail.x - this.x);
-            const stepSize = 2 + Math.random() * 3;
-
+            const stepSize = 2 + Math.random() * 2;
             this.x += stepSize * Math.cos(angle);
             this.y += stepSize * Math.sin(angle);
-
-            this.x = Math.max(this.size, Math.min(this.x, this.canvas.width - this.size));
-            this.y = Math.max(this.size, Math.min(this.y, this.canvas.height - this.size));
         }
     }
 }
