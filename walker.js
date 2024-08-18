@@ -7,7 +7,7 @@ export class Walker {
         this.size = 0;
         this.color = color;
         this.path = [];
-        this.maxPathLength = 1000;
+        this.maxPathLength = 10000;
         this.hunger = 0;
         this.hungerDecreaseRate = 0.05;
         this.hungerThreshold = 30;
@@ -96,7 +96,7 @@ export class Walker {
         this.ctx.globalCompositeOperation = 'lighter'; // Blend mode for path color bleeding
         this.ctx.beginPath();
         this.ctx.strokeStyle = this.color; // Use the walker's color
-        this.ctx.lineWidth = 0.4;
+        this.ctx.lineWidth = 0.05;
         this.ctx.globalAlpha = 0.5;
 
         this.path.forEach((point, index) => {

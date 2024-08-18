@@ -6,8 +6,8 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 // Configuration parameters
-const numberOfFood = 50;
-const numberOfWalkers = 50;
+const numberOfFood = 0;
+const numberOfWalkers = 100;
 
 // Set canvas size
 canvas.width = window.innerWidth;
