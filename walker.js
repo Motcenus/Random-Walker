@@ -1,45 +1,26 @@
 export class Walker {
-    constructor(canvas, food, walkers, color = '#ff0000') {
+    constructor(canvas, food, color = '#ff0000') {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.x = canvas.width / 2;
         this.y = canvas.height / 2;
         this.size = 5;
         this.color = color;
-        this.minStepSize = 2;
-        this.maxStepSize = 5;
         this.path = [];
         this.maxPathLength = 1000;
         this.hunger = 100;
         this.hungerDecreaseRate = 0.05;
         this.hungerThreshold = 30;
         this.learningRate = 0.1;
-
-        this.canvas.width = window.innerWidth;
-        this.canvas.height = window.innerHeight;
-
-        this.food = food;
-        this.walkers = walkers; // List of all walkers
-        this.score = 0;
-        this.startTime = Date.now();
-        this.timeElapsed = 0;
-
-        // Movement preferences
-        this.preferences = Array(8).fill(0);
-        this.moveCount = 0;
-
-        // Movement state
-        this.currentAngle = Math.random() * 2 * Math.PI; // Initial random angle
-        this.angleChangeRate = 0.5; // Increased randomness in angle changes
-        this.maxStraightLineLength = 10; // Prevent straight-line movement
+        this.currentAngle = Math.random() * 2 * Math.PI;
+        this.angleChangeRate = 0.5;
+        this.maxStraightLineLength = 10;
         this.straightLineCounter = 0;
-
-        // Canvas boundary constraints
-        this.boundaryBuffer = 20; // Buffer to keep the walker within the canvas
-    }
-
-    drawFood() {
-        this.food.drawFood();
+        this.boundaryBuffer = 20;
+        this.score = 0;
+        this.preferences = Array(8).fill(1);
+        this.moveCount = 0;
+        this.startTime = Date.now();
     }
 
     drawWalker() {
@@ -51,7 +32,7 @@ export class Walker {
 
     drawPath() {
         this.ctx.beginPath();
-        this.ctx.strokeStyle = '#000000';
+        this.ctx.strokeStyle = this.color; // Use the walker's color
         this.ctx.lineWidth = 2;
         this.ctx.globalAlpha = 0.5;
 
@@ -71,7 +52,6 @@ export class Walker {
         this.ctx.fillStyle = '#000000';
         this.ctx.font = '20px Arial';
         this.ctx.textAlign = 'left';
-
         this.ctx.fillText(`Score: ${this.score}`, 10, 30);
         this.timeElapsed = Math.floor((Date.now() - this.startTime) / 1000);
         this.ctx.fillText(`Time: ${this.timeElapsed}s`, 10, 60);
@@ -94,43 +74,33 @@ export class Walker {
 
         this.hunger = Math.max(0, this.hunger - this.hungerDecreaseRate);
 
-        // Determine movement based on hunger
-        const stepSize = this.hunger < this.hungerThreshold ? this.maxStepSize : this.minStepSize + Math.random() * (this.maxStepSize - this.minStepSize);
+        const stepSize = this.hunger < this.hungerThreshold ? 5 : 2 + Math.random() * 3; // Random step size
+        const angleChange = (Math.random() - 0.5) * this.angleChangeRate;
+        this.currentAngle += angleChange;
 
-        // Increase randomness in angle change
-        if (Math.random() < 0.2 || this.straightLineCounter >= this.maxStraightLineLength) {
-            // Randomly change the angle more aggressively
-            this.currentAngle += (Math.random() - 0.5) * this.angleChangeRate;
-            this.currentAngle = (this.currentAngle + 2 * Math.PI) % (2 * Math.PI); // Normalize angle
-            this.straightLineCounter = 0;
-        }
-
-        // Calculate the new position
         let newX = this.x + stepSize * Math.cos(this.currentAngle);
         let newY = this.y + stepSize * Math.sin(this.currentAngle);
 
-        // Adjust direction if near the edges
         const edgeBuffer = this.size + this.boundaryBuffer;
         const rightEdge = this.canvas.width - edgeBuffer;
         const bottomEdge = this.canvas.height - edgeBuffer;
 
         if (newX < edgeBuffer) {
             newX = edgeBuffer;
-            this.currentAngle = Math.random() * Math.PI + Math.PI; // Move right
+            this.currentAngle = Math.random() * Math.PI + Math.PI;
         } else if (newX > rightEdge) {
             newX = rightEdge;
-            this.currentAngle = Math.random() * Math.PI; // Move left
+            this.currentAngle = Math.random() * Math.PI;
         }
 
         if (newY < edgeBuffer) {
             newY = edgeBuffer;
-            this.currentAngle = Math.random() * (Math.PI / 2) + (3 * Math.PI / 2); // Move down
+            this.currentAngle = Math.random() * (Math.PI / 2) + (3 * Math.PI / 2);
         } else if (newY > bottomEdge) {
             newY = bottomEdge;
-            this.currentAngle = Math.random() * (Math.PI / 2) + (Math.PI / 2); // Move up
+            this.currentAngle = Math.random() * (Math.PI / 2) + (Math.PI / 2);
         }
 
-        // Update the position of the walker
         this.x = newX;
         this.y = newY;
         this.straightLineCounter++;
@@ -182,34 +152,34 @@ export class Walker {
         return Math.sqrt(dx * dx + dy * dy) < threshold;
     }
 
-    followTrailIfClose() {
-        let bestLeader = null;
-        let maxScore = -1;
+    followTrailIfClose(leader, threshold) {
+        if (leader.path.length === 0) return;
 
-        for (let walker of this.walkers) {
-            if (walker !== this && walker.score > maxScore) {
-                bestLeader = walker;
-                maxScore = walker.score;
+        let closestTrail = null;
+        let minDistance = Infinity;
+
+        for (let otherWalker of leader.path) {
+            if (otherWalker.score <= this.score) continue;
+
+            const distance = Math.sqrt(
+                (this.x - otherWalker.x) ** 2 + (this.y - otherWalker.y) ** 2
+            );
+
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestTrail = otherWalker;
             }
         }
 
-        if (!bestLeader) return;
+        if (closestTrail && minDistance < threshold) {
+            const angle = Math.atan2(closestTrail.y - this.y, closestTrail.x - this.x);
+            const stepSize = 2 + Math.random() * 3;
 
-        const leaderPath = bestLeader.path;
-        if (leaderPath.length === 0) return;
+            this.x += stepSize * Math.cos(angle);
+            this.y += stepSize * Math.sin(angle);
 
-        const leaderPosition = leaderPath[leaderPath.length - 1];
-        if (!this.isCloseToTrail(leaderPosition.x, leaderPosition.y, 50)) return; // Follow if within 50px
-
-        const distance = Math.sqrt((this.x - leaderPosition.x) ** 2 + (this.y - leaderPosition.y) ** 2);
-
-        const stepSize = this.minStepSize + Math.random() * (this.maxStepSize - this.minStepSize);
-        const angle = Math.atan2(leaderPosition.y - this.y, leaderPosition.x - this.x);
-
-        this.x += stepSize * Math.cos(angle);
-        this.y += stepSize * Math.sin(angle);
-
-        this.x = Math.max(this.size, Math.min(this.canvas.width - this.size, this.x));
-        this.y = Math.max(this.size, Math.min(this.canvas.height - this.size, this.y));
+            this.x = Math.max(this.size, Math.min(this.canvas.width - this.size, this.x));
+            this.y = Math.max(this.size, Math.min(this.canvas.height - this.size, this.y));
+        }
     }
 }
