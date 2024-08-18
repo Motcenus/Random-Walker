@@ -5,15 +5,15 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 // Configuration parameters
-const numberOfFood = 50;
-const numberOfWalkers = 50;
+const numberOfFood = 100;
+const numberOfWalkers = 100;
 
 // Set canvas size
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 // Create food and walkers
-const food = new Food(canvas, 5, numberOfFood);
+const food = new Food(canvas, 1, numberOfFood);
 
 const walkers = [];
 for (let i = 0; i < numberOfWalkers; i++) {
@@ -46,7 +46,7 @@ function gameLoop() {
     // Make non-leader walkers follow the leader's trail
     walkers.forEach(walker => {
         if (walker !== leader) {
-            walker.followTrailIfClose(leader, 50);
+            walker.followTrailIfClose(leader, 1000);
         }
     });
 
@@ -58,7 +58,7 @@ function gameLoop() {
 }
 
 function displayHighestScore(leader) {
-    ctx.font = '40px Arial';
+    ctx.font = '20px Arial';
     ctx.textAlign = 'center';
     ctx.fillStyle = leader.color;
     ctx.fillText(`Highest Score: ${leader.score}`, canvas.width / 2, 50);
