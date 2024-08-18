@@ -1,20 +1,41 @@
+import { Food } from './food.js';
 import { Walker } from './walker.js';
 
-const canvas = document.getElementById('walkerCanvas');
-const walker = new Walker(canvas);
+const canvas = document.getElementById('gameCanvas');
 
-function animate() {
-    const ctx = walker.ctx;
+// Configuration parameters
+const numberOfFood = 50;
+const numberOfWalkers = 10;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+// Create food and walkers
+const food = new Food(canvas, 15, numberOfFood);
 
-    walker.drawObstacles();
-    walker.drawFood();      // Draw the food
-    walker.drawPath();
-    walker.drawWalker();
-
-    walker.move();
-    requestAnimationFrame(animate);
+const walkers = [];
+for (let i = 0; i < numberOfWalkers; i++) {
+    const color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+    walkers.push(new Walker(canvas, food, color));
 }
 
-animate();
+function gameLoop() {
+    canvas.width = canvas.width; // Clear the canvas
+
+    walkers.forEach(walker => {
+        walker.move();
+        walker.drawPath();
+        walker.drawWalker();
+        walker.drawFood();
+        walker.drawScoreAndTimer();
+    });
+
+    const leader = walkers.reduce((prev, curr) => (curr.score > prev.score ? curr : prev), walkers[0]);
+
+    walkers.forEach(walker => {
+        if (walker !== leader) {
+            walker.followTrailIfClose(leader, 50);
+        }
+    });
+
+    requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
