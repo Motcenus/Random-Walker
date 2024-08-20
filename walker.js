@@ -38,8 +38,8 @@ export class Walker {
 
         this.hunger = Math.max(0, this.hunger - this.hungerDecreaseRate);
 
-        const stepSize = this.hunger < this.hungerThreshold ? 5 : 2 + Math.random() * 3; 
-        const angleChange = (Math.random() - 0.5) * this.angleChangeRate;
+        const stepSize = this.hunger < this.hungerThreshold ? 50*Math.random() : 2 + Math.random() * 3; 
+        const angleChange = Math.random()*(5 - 0.5) * this.angleChangeRate;
         this.currentAngle += angleChange;
 
         let newX = this.x + stepSize * Math.cos(this.currentAngle);
@@ -96,8 +96,8 @@ export class Walker {
         this.ctx.globalCompositeOperation = 'lighter'; // Blend mode for path color bleeding
         this.ctx.beginPath();
         this.ctx.strokeStyle = this.color; // Use the walker's color
-        this.ctx.lineWidth = 0.05;
-        this.ctx.globalAlpha = 0.5;
+        this.ctx.lineWidth = 0.1;
+        this.ctx.globalAlpha = 0.1;
 
         this.path.forEach((point, index) => {
             if (index === 0) {

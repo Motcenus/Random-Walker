@@ -7,7 +7,7 @@ const ctx = canvas.getContext('2d');
 
 // Configuration parameters
 const numberOfFood = 0;
-const numberOfWalkers = 100;
+const numberOfWalkers = 200;
 
 // Set canvas size
 canvas.width = window.innerWidth;
